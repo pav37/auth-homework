@@ -1,0 +1,165 @@
+migration:
+  name: migration-job
+  secretName: migration-secret
+  configmapName: migration-configmap
+  image:
+    repository: sp357468/migration
+    tag: "1.7"
+    pullPolicy: Always
+  job:
+    restartPolicy: Never
+app:
+  name: myapp
+  secretName: app-secret
+  configmapName: app-configmap
+  portNumber: 8000
+  ingressHost: arch.homework
+  image: sp357468/myapp:3.3
+  issuer: http://arch.homework
+  resources:
+    limits:
+      cpu: "1"
+      memory: "300Mi"
+    requests:
+      cpu: "0.1"
+      memory: "100Mi"
+
+db:
+  pgUsername: postgres
+  password: cXdlcg==
+  port: 5432
+postgresql:
+  primary:
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/metrics/cluster"
+      prometheus.io/port: "9000"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  existingSecret: pg-secret
+  postgresqlDatabase: app
+  postgresqlUsername: app
+  persistence:
+    size: 1Gi
+    enabled: false
+  image:
+#    tag: 13.1.0
+    debug: true
+  fullnameOverride: myapp-pg
+  service:
+    type: NodePort
+    nodePort: 30533
+  volumePermissions:
+    enabled: true
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1000Mi"
+    requests:
+      cpu: "0.1"
+      memory: "100Mi"
+
+pgchecker:
+  image:
+    repository: docker.io/busybox
+    tag: 1.32
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: "0.1"
+      memory: "100Mi"
+    requests:
+      cpu: "0.1"
+      memory: "100Mi"
+
+
+authServer:
+  name: auth-server
+  secretName: auth-server-secret
+  configmapName: auth-server-configmap
+  portNumber: 9000
+  ingressHost: arch.homework
+  image: sp357468/auth-server:2.5
+  redirectUri: http://arch.homework/
+  issuer: http://arch.homework
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1000Mi"
+    requests:
+      cpu: "0.1"
+      memory: "100Mi"
+
+metrics:
+  serviceMonitor:
+    enabled: false
+
+ingressAuth:
+  enabled: true
+
+oauth2Proxy:
+  name: app-oauth2-proxy
+  port: 80
+
+oauth2-proxy:
+  redis:
+    enabled: false
+  initContainers:
+    - name: auth-server-checker
+      image: "docker.io/busybox:1.32"
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+        - -c
+        - |
+          echo 'Waiting for auth-server to become ready...'
+          until printf "." && nc -z -w 2  auth-server 9000; do
+              sleep 10;
+          done;
+          echo 'auth-server OK ?'
+  args:
+    - --scope=openid read
+    - --pass-authorization-header=true
+    - --pass-access-token=true
+    - --set-xauthrequest=true
+    - --email-domain=*
+    - --cookie-domain=arch.homework
+    - --whitelist-domain=arch.homework
+    - --cookie-secure=true
+    - --insecure-oidc-allow-unverified-email=true
+    - --insecure-oidc-skip-issuer-verification=true
+    - --pass-basic-auth=true
+    - --pass-user-headers=true
+    - --request-logging=true
+    - --set-authorization-header=true
+    - --show-debug-on-error=true
+    - --ssl-insecure-skip-verify=true
+    - --silence-ping-logging=true
+    - --standard-logging=true
+
+  image:
+    repository: sp357468/oauth2-proxy
+    tag: "1.0"
+
+  configuration:
+    clientID: "users-client"
+    clientSecret: "secret"
+    cookieSecret: "V1owZUdNb3FOTGh6SEpnQzBiT2ptUT09"
+
+  extraEnvVars:
+    - name: OAUTH2_PROXY_PROVIDER
+      value: "oidc"
+    - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+      value: "http://arch.homework"
+    - name: OAUTH2_PROXY_HTTP_ADDRESS
+      value: "0.0.0.0:4180"
+    - name: OAUTH2_PROXY_UPSTREAMS
+      value: "file:///dev/null"
+
+  ingress:
+    enabled: false
+    hosts:
+      - arch.homework
+    path: /oauth2

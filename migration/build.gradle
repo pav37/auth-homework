@@ -1,0 +1,28 @@
+plugins {
+	id 'org.liquibase.gradle' version '2.0.3'
+}
+
+group = 'com.myapp'
+version = '0.0.1'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	liquibaseRuntime 'org.liquibase:liquibase-core:3.8.1'
+	liquibaseRuntime 'org.postgresql:postgresql:42.3.1'
+	liquibaseRuntime group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+}
+
+liquibase {
+	activities {
+		main {
+			changeLogFile 'src/main/db/Changelog.xml'
+			url "jdbc:postgresql://$System.env.DB_HOST:$System.env.DB_PORT/$System.env.DB_NAME"
+			username "$System.env.MIGRATION_DB_USER"
+			password "$System.env.MIGRATION_DB_PASSWORD"
+		}
+	}
+}
+

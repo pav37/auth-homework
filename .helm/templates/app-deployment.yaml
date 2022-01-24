@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.app.name }}
+  labels:
+    app: {{ .Values.app.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+    spec:
+      serviceAccountName: app-service-account
+      initContainers:
+        - name: "{{ .Chart.Name }}-init"
+          image: "groundnuty/k8s-wait-for:1.3"
+          imagePullPolicy: Always
+          args:
+            - "job"
+            - "{{ .Values.migration.name }}-{{ .Chart.AppVersion }}"
+        - name: auth-server-checker
+          image: "{{ .Values.pgchecker.image.repository }}:{{ .Values.pgchecker.image.tag }}"
+          imagePullPolicy: {{ .Values.pgchecker.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              echo 'Waiting for auth-server to become ready...'
+              until printf "." && nc -z -w 2 {{ printf "%s" .Values.authServer.name }} {{ .Values.authServer.portNumber }}; do
+                  sleep 10;
+              done;
+              echo 'auth-server OK ?'
+      containers:
+        - name: {{ .Values.app.name }}
+          image: {{ .Values.app.image }}
+          env:
+            - name: ISSUER
+              value: {{ .Values.app.issuer }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.app.secretName }}
+            - configMapRef:
+                name: {{ .Values.app.configmapName }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.app.portNumber }}
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: {{ .Values.app.portNumber }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: {{ .Values.app.portNumber }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: {{ .Values.app.resources.limits.cpu }}
+              memory: {{ .Values.app.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.app.resources.requests.cpu }}
+              memory: {{ .Values.app.resources.requests.memory }}

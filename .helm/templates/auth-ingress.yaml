@@ -1,0 +1,118 @@
+{{- if .Values.ingressAuth.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/auth-signin: "http://$host/oauth2/start?rd=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-url: "http://app-oauth2-proxy.auth.svc.cluster.local/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-response-headers: "Authorization"
+    kubernetes.io/ingress.class: nginx
+  name: auth-ingress
+spec:
+  rules:
+    - host: arch.homework
+      http:
+        paths:
+          - path: /hello
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.app.name }}
+                port:
+                  number: {{ .Values.app.portNumber }}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auth-server
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: arch.homework
+      http:
+        paths:
+          - path: /authorize
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.authServer.name }}
+                port:
+                  number: {{ .Values.authServer.portNumber }}
+          - path: /register
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.authServer.name }}
+                port:
+                  number: {{ .Values.authServer.portNumber }}
+          - path: /logout
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.authServer.name }}
+                port:
+                  number: {{ .Values.authServer.portNumber }}
+          - path: /users
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.authServer.name }}
+                port:
+                  number: {{ .Values.authServer.portNumber }}
+          - path: /login
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.authServer.name }}
+                port:
+                  number: {{ .Values.authServer.portNumber }}
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.authServer.name }}
+                port:
+                  number: {{ .Values.authServer.portNumber }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.oauth2Proxy.name }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: arch.homework
+      http:
+        paths:
+          - path: /oauth2/start
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.oauth2Proxy.name }}
+                port:
+                  number: {{ .Values.oauth2Proxy.port }}
+          - path: /oauth2/auth
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.oauth2Proxy.name }}
+                port:
+                  number: {{ .Values.oauth2Proxy.port }}
+          - path: /oauth2/callback
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.oauth2Proxy.name }}
+                port:
+                  number: {{ .Values.oauth2Proxy.port }}
+{{/*          - path: /oauth2/authorize*/}}
+{{/*            pathType: ImplementationSpecific*/}}
+{{/*            backend:*/}}
+{{/*              service:*/}}
+{{/*                name: {{ .Values.oauth2Proxy.name }}*/}}
+{{/*                port:*/}}
+{{/*                  number: {{ .Values.oauth2Proxy.port }}*/}}
+{{- end }}

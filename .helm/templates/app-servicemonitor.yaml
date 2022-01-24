@@ -1,0 +1,20 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.app.name }}-monitor
+  labels:
+    app: {{ .Values.app.name }}
+spec:
+  jobLabel: {{ .Values.app.name }}
+  namespaceSelector:
+    matchNames:
+    - "{{ $.Release.Namespace }}"
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  endpoints:
+  - interval: 15s
+    port: {{ .Values.app.name }}-web
+    path: /prometheus
+{{- end }}

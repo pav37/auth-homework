@@ -1,0 +1,49 @@
+@startuml
+autonumber
+actor User
+participant "Browser"
+participant "Api gateway / Auth proxy"
+participant "Auth service"
+participant "Service"
+
+
+alt #LightBlue auth user
+
+User -> "Api gateway / Auth proxy" : Запрос /hello
+||7||
+"Api gateway / Auth proxy" -> Browser : Не авторизован > 302 /oauth2/start
+||7||
+Browser -> "Api gateway / Auth proxy" : Инициация авторизации /oauth2/start
+||7||
+"Api gateway / Auth proxy" -> Browser : Необходима авторизация на Auth service > 302 /oauth2/authorize
+||7||
+Browser -> "Auth service" : Запрос авторизации /oauth2/authorize
+||7||
+
+alt #Pink
+"Auth service" -> User : Отсутствуют заголовки авторизации (401) > 302 /login
+User -> "Auth service" : Запрос /login
+end
+
+"Auth service" -> Browser : Успешный вход 302 > /oauth2/authorize
+||7||
+Browser -> "Auth service" : Запрос авторизации /oauth2/authorize
+||7||
+"Auth service" -> "Api gateway / Auth proxy" : Получен Authorization code > 302 /oauth2/callback
+||7||
+"Api gateway / Auth proxy" -> "Auth service" : Запрос токена (с authorization code + client id + client secret) /oauth2/token
+||7||
+"Auth service" -> "Api gateway / Auth proxy" : Получен токен
+||7||
+"Api gateway / Auth proxy" -> Browser : Авторизован > 302 /oauth2/callback
+||7||
+Browser -> "Api gateway / Auth proxy" : Запрос /oauth2/callback
+||7||
+"Api gateway / Auth proxy" -> Browser : Редирект 302 /hello
+||7||
+Browser -> "Service" : Запрос /hello
+||7||
+Service -> User : Ответ (200)
+
+end
+@enduml
