@@ -2,8 +2,6 @@
 Для аутентификации и авторизации используется Authentication and Authorization code flow, 
     для этого в приложение добавлен компонент oauth2-proxy (https://github.com/oauth2-proxy/oauth2-proxy). 
 
-[Ссылка на схему](myapp-auth-oauth2-proxy.puml)
-
 Список компонентов:
 1. Api Gateway (Nginx Controller + Oauth2 proxy) - аутентификация пользователей для доступа к приложению Myapp.
 2. Auth Service - сервер аутентификации/авторизации/регистрации пользователей.
@@ -34,5 +32,9 @@ newman run UserRegistration-Auth_Arch_Example.postman_collection.json
 # Удаление развернутых ресурсов
     helm -n auth delete app 
     kubectl delete namespace auth
+
+[Ссылка на схему](myapp-auth-oauth2-proxy.puml)
+![Схема](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/pav37/auth-homework/main/myapp-auth-oauth2-proxy.puml)
+
 
 Домашнее задание/проектная работа разработано(-на) для курса [Microservice Architecture](https://otus.ru/lessons/microservice-architecture)
