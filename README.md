@@ -20,6 +20,7 @@
 
 
 # Развертывание
+    helm dependency update
     helm -n auth upgrade --install --create-namespace app .
 Манифесты развертываются в namespace auth
 
