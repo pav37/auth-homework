@@ -1,0 +1,3 @@
+@startuml
+!includeurl https://github.com/pav37/auth-homework/blob/main/myapp-auth-oauth2-proxy.puml
+@enduml
