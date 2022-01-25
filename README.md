@@ -27,17 +27,17 @@
 Манифесты развертываются в namespace auth
 
 # Проверка
-Проверка регистрации/логина/логаута пользователей, просмотр и редактирование профиля пользователя
-    `newman run UserRegistration-Auth_Arch.postman_collection.json`
+## Проверка регистрации/логина/логаута пользователей, просмотр и редактирование профиля пользователя
+    newman run UserRegistration-Auth_Arch.postman_collection.json
 
-Простой пример регистрации/логина пользователя и доступа к ресурсу
-    `newman run UserRegistration-Auth_Arch_Example.postman_collection.json`
+## Простой пример регистрации/логина пользователя и доступа к ресурсу
+    newman run UserRegistration-Auth_Arch_Example.postman_collection.json
 
 # Удаление развернутых ресурсов
     helm -n auth delete app 
     kubectl delete namespace auth
 
-[Ссылка на схему](myapp-auth-oauth2-proxy.puml)
+[Схема](myapp-auth-oauth2-proxy.puml)
 ![Схема](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/pav37/auth-homework/main/myapp-auth-oauth2-proxy.puml)
 
 
