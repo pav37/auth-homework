@@ -28,10 +28,10 @@
 
 # Проверка
 Проверка регистрации/логина/логаута пользователей, просмотр и редактирование профиля пользователя
-newman run UserRegistration-Auth_Arch.postman_collection.json
+    `newman run UserRegistration-Auth_Arch.postman_collection.json`
 
 Простой пример регистрации/логина пользователя и доступа к ресурсу
-newman run UserRegistration-Auth_Arch_Example.postman_collection.json
+    `newman run UserRegistration-Auth_Arch_Example.postman_collection.json`
 
 # Удаление развернутых ресурсов
     helm -n auth delete app 
